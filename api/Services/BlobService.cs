@@ -6,7 +6,7 @@ namespace Api.Services
 {
     public class BlobService
     {
-        readonly BlobServiceClient _service;
+        internal readonly BlobServiceClient _service;
 
         public BlobService(string connectionString)
         {

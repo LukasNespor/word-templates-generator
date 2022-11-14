@@ -23,24 +23,24 @@ namespace Api
         public IActionResult Run([HttpTrigger("get", Route = "uploadtoken")] HttpRequest req)
         {
             var container = _blobService.GetContainer(Constants.TemplatesContainerName);
-            var uri = GetContainerSasUri(container, BlobContainerSasPermissions.Create);
-            return new OkObjectResult(uri);
+            var sas = GetContainerSasUri(container, BlobContainerSasPermissions.Create);
+            return new OkObjectResult($"BlobEndpoint={_blobService._service.Uri};SharedAccessSignature={sas.Query}");
         }
 
         static Uri GetContainerSasUri(BlobContainerClient container, BlobContainerSasPermissions permissions)
         {
-            var adHocSas = CreateAdHocSasPolicy(permissions);
-            return container.GenerateSasUri(adHocSas);
+            var builder = CreateAdHocSasBuilder(container.Name, permissions);
+            return container.GenerateSasUri(builder);
         }
 
-        static BlobSasBuilder CreateAdHocSasPolicy(BlobContainerSasPermissions permissions)
+        static BlobSasBuilder CreateAdHocSasBuilder(string containerName, BlobContainerSasPermissions permissions)
         {
             BlobSasBuilder builder = new()
             {
                 // Set start time to five minutes before now to avoid clock skew.
                 StartsOn = DateTime.UtcNow.AddMinutes(-5),
                 ExpiresOn = DateTime.UtcNow.AddHours(1),
-                BlobContainerName = Constants.TemplatesContainerName,
+                BlobContainerName = containerName
             };
             builder.SetPermissions(permissions);
             return builder;
