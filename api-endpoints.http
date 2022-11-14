@@ -1,0 +1,42 @@
+@baseUrl = http://localhost:7237/api
+
+GET {{baseUrl}}/uploadtoken
+###
+
+GET {{baseUrl}}/lists
+###
+
+POST {{baseUrl}}/templates
+Content-Type: application/json
+
+{
+    "name": "Šablona 1",
+    "description": "Krátký popis",
+    "group": "Skupina 1",
+    "blobName": "Sablona1.docx"
+}
+###
+
+GET {{baseUrl}}/templates
+###
+
+POST {{baseUrl}}/generate
+Content-Type: application/json
+
+{
+    "blobName": "Sablona1.docx",
+    "fields": [
+        {
+            "name":"Field1",
+            "value":"CJ123456789"
+        },
+        {
+            "name":"Field1",
+            "value":"František Vomáčka"
+        }
+    ]
+}
+###
+
+DELETE {{baseUrl}}/templates/{id-here}
+###
