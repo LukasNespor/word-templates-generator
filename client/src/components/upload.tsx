@@ -44,10 +44,10 @@ const Upload: FunctionComponent<IUploadProps> = ({ hidden, onDismissed, onUpload
     }
 
     setProcessing(true);
-    const sas: string = await getUploadToken();
-    const blobClient = BlobServiceClient.fromConnectionString(sas);
-    const container = blobClient.getContainerClient("templates");
     try {
+      const sas: string = await getUploadToken();
+      const blobClient = BlobServiceClient.fromConnectionString(sas);
+      const container = blobClient.getContainerClient("templates");
       await container.uploadBlockBlob(file.name, file, file.size);
       const processed: ITemplate = await createTemplate({
         id: "",
@@ -60,7 +60,7 @@ const Upload: FunctionComponent<IUploadProps> = ({ hidden, onDismissed, onUpload
       setProcessing(false);
       onUploaded(processed);
     } catch (error) {
-      const err: RestError = error;
+      const err: RestError = error as RestError;
       console.error(err);
 
       if (err.code === "UnauthorizedBlobOverwrite") {
@@ -138,8 +138,8 @@ const Upload: FunctionComponent<IUploadProps> = ({ hidden, onDismissed, onUpload
       <DialogFooter>
         <PrimaryButton disabled={!(name && file) || processing} onClick={onSubmit}>
           {processing && <Spinner size={SpinnerSize.small} />}
-            Nahrát šablonu
-          </PrimaryButton>
+          Nahrát šablonu
+        </PrimaryButton>
         <DefaultButton disabled={processing} text="Zavřít" onClick={onDismissed} />
       </DialogFooter>
     </Dialog>
