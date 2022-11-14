@@ -24,7 +24,7 @@ export const createTemplate = async (data: ITemplate): Promise<ITemplate> => {
 };
 
 export const deleteTemplate = async (id: string): Promise<void> => {
-    return await axios.delete(`$/api/templates/${id}`);
+    return await axios.delete(`/api/templates/${id}`);
 };
 
 export const generateDocument = async (fields: IField[], blobName: string): Promise<Blob> => {
