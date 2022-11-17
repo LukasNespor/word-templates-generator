@@ -61,6 +61,7 @@ const App: FunctionComponent = () => {
       }
     }
     connect();
+  // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
