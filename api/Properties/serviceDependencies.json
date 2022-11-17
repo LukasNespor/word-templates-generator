@@ -3,6 +3,11 @@
     "storage1": {
       "type": "storage",
       "connectionId": "Storage"
+    },
+    "signalr1": {
+      "type": "signalr",
+      "connectionId": "AzureSignalRConnectionString",
+      "dynamicId": null
     }
   }
 }

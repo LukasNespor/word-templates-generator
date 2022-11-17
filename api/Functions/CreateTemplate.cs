@@ -3,6 +3,7 @@ using Api.Services;
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Logging;
 using OpenXmlHelpers.Word;
 using System;
@@ -24,7 +25,10 @@ namespace Api
         }
 
         [FunctionName(nameof(CreateTemplate))]
-        public async Task<IActionResult> Run([HttpTrigger("post", Route = "templates")] TemplateModel data, ILogger log)
+        public async Task<IActionResult> Run(
+            [HttpTrigger("post", Route = "templates")] TemplateModel data,
+            [SignalR(HubName = "templates")] IAsyncCollector<SignalRMessage> signalMessages,
+            ILogger log)
         {
             try
             {
@@ -64,7 +68,7 @@ namespace Api
 
                 log.LogInformation("Template processed");
 
-                return new OkObjectResult(new TemplateModel()
+                TemplateModel model = new()
                 {
                     Id = id,
                     Name = data.Name,
@@ -72,7 +76,15 @@ namespace Api
                     Group = data.Group,
                     Description = data.Description,
                     Fields = fields
+                };
+
+                await signalMessages.AddAsync(new SignalRMessage
+                {
+                    Target = "newTemplate",
+                    Arguments = new[] { model }
                 });
+
+                return new OkObjectResult(model);
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
-import { FunctionComponent, useCallback, useEffect, useState } from "react";
+import { FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
 import { initializeIcons } from "@fluentui/react";
+import { HubConnectionBuilder } from "@microsoft/signalr";
 import update from "immutability-helper";
 import Upload from "./components/upload";
 import Templates from "./components/templates";
@@ -17,6 +18,50 @@ const App: FunctionComponent = () => {
   const [templates, setTemplates] = useState<ITemplate[]>([]);
   const [lists, setLists] = useState<IListItem[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<ITemplate>();
+
+  const connection = new HubConnectionBuilder().withUrl("/api").build();
+  const templatesRef = useRef<ITemplate[]>([]);
+  templatesRef.current = templates;
+
+  const onTemplateRemoved = useCallback((template: ITemplate) => {
+    const found = templatesRef.current.find((x: ITemplate) => x.blobName === template.blobName);
+    if (found) {
+      const index = templatesRef.current.indexOf(found);
+      const updated = update(templatesRef.current, { $splice: [[index, 1]] });
+      setTemplates(updated);
+      setSelectedTemplate(undefined);
+    }
+  }, [templatesRef]);
+
+  const newTemplateMessage = useCallback((template: ITemplate) => {
+    console.debug("Created template:", template)
+    const found = templatesRef.current.find((x: ITemplate) => x.id === template.id);
+    if (!found) {
+      setTemplates([...templatesRef.current, template]);
+    }
+  }, [templatesRef]);
+
+  const templateRemovedMessage = useCallback((id: string) => {
+    console.debug("Removed template:", id)
+    const found = templatesRef.current.find((x: ITemplate) => x.id === id);
+    if (found) {
+      onTemplateRemoved(found);
+    }
+  }, [templatesRef, onTemplateRemoved]);
+
+  useEffect(() => {
+    const connect = async () => {
+      try {
+        await connection.start()
+        console.debug("Connected");
+        connection.on("newTemplate", (template: ITemplate) => newTemplateMessage(template));
+        connection.on("templateRemoved", (id: string) => templateRemovedMessage(id));
+      } catch (e) {
+        console.error("Connection failed:", e)
+      }
+    }
+    connect();
+  }, []);
 
   useEffect(() => {
     initializeIcons();
@@ -51,16 +96,6 @@ const App: FunctionComponent = () => {
   const onTemplatesLoaded = useCallback((items: ITemplate[]) => {
     setTemplates(items);
   }, []);
-
-  const onTemplateRemoved = (template: ITemplate) => {
-    const found = templates.find((x: ITemplate) => x.blobName === template.blobName);
-    if (found) {
-      const index = templates.indexOf(found);
-      const updated = update(templates, { $splice: [[index, 1]] });
-      setTemplates(updated);
-      setSelectedTemplate(undefined);
-    }
-  };
 
   const onUploaded = (template: ITemplate) => {
     setDialogHidden(true);

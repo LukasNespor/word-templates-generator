@@ -3,6 +3,7 @@ using Api.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -21,7 +22,10 @@ namespace Api
         }
 
         [FunctionName(nameof(RemoveTemplate))]
-        public async Task<IActionResult> Run([HttpTrigger("delete", Route = "templates/{id}")] HttpRequest req, string id, ILogger log)
+        public async Task<IActionResult> Run(
+            [HttpTrigger("delete", Route = "templates/{id}")] HttpRequest req, string id,
+            [SignalR(HubName = "templates")] IAsyncCollector<SignalRMessage> signalMessages,
+            ILogger log)
         {
             try
             {
@@ -29,6 +33,13 @@ namespace Api
                 await _tableService.DeleteRecordAsync(Constants.TemplatesTableName, record);
                 var blob = _blobService.GetBlobClient(Constants.TemplatesContainerName, record.BlobName);
                 await blob.DeleteIfExistsAsync();
+
+                await signalMessages.AddAsync(new SignalRMessage
+                {
+                    Target = "templateRemoved",
+                    Arguments = new[] { id }
+                });
+
                 return new NoContentResult();
             }
             catch (Exception ex)
