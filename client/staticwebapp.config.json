@@ -1,0 +1,22 @@
+{
+  "routes": [
+    {
+      "route": "/index.html",
+      "allowedRoles": [
+        "contributor"
+      ]
+    },
+    {
+      "route": "/api/*",
+      "allowedRoles": [
+        "contributor"
+      ]
+    }
+  ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad",
+      "statusCode": 302
+    }
+  }
+}
